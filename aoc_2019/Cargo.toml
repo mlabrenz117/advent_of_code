@@ -1,0 +1,15 @@
+[package]
+name = "aoc_2019"
+version = "0.1.0"
+authors = ["Mitch Labrenz <MitchSLabrenz@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+itertools = "0.8"
+rayon = "1.2"
+regex = "1.1"
+chrono = "0.4"
+lazy_static = "1.2"
+aoc-runner = "0.2"
+aoc-runner-derive ="0.2"
+linked-list = "0.0.3"
