@@ -100,10 +100,10 @@ fn last_cart(data: &DataStore) -> Cart {
             for x in 0..data.track[y].len() {
                 if let Some(idx) = locations.get(&(x, y)) {
                     let c: char = carts[*idx].direction.into();
-                    print!("{}", c);
+                    //print!("{}", c);
                 } else {
                     let c: char = data.track[y][x].map(|t| t.into()).unwrap_or(' ');
-                    print!("{}", c);
+                    //print!("{}", c);
                 }
             }
             println!();
@@ -283,6 +283,5 @@ mod tests {
         dbg!(&cart);
         assert_eq!(cart.x, 6);
         assert_eq!(cart.y, 4);
-        assert!(false);
     }
 }

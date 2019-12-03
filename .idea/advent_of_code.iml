@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="CPP_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/aoc_2019/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/aoc_2019/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/aoc_2019/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/aoc_2019/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/aoc_2018/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/aoc_2018/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/aoc_2018/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/aoc_2018/benches" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/aoc_2018/target" />
+      <excludeFolder url="file://$MODULE_DIR$/aoc_2019/target" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>
