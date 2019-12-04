@@ -31,7 +31,7 @@ fn generator(input: &str) -> Vec<HashMap<Point, usize>> {
             })
             .for_each(|(dir, value)| {
                 for _ in 0..value {
-                    cursor.step(&dir);
+                    cursor.step(dir);
                     steps += 1;
                     let map = cables.get_mut(cable).unwrap();
                     if let Some(old) = map.insert(cursor, steps) {
@@ -47,12 +47,17 @@ fn solve<F>(input: &[HashMap<Point, usize>], func: F) -> usize
 where
     F: FnMut(&Point) -> usize,
 {
-    input[0].intersection(&input[1]).map(func).min().unwrap()
+    input[0]
+        .keys()
+        .intersection(&input[1])
+        .map(func)
+        .min()
+        .unwrap()
 }
 
 #[aoc(day3, part1)]
 fn part1(input: &[HashMap<Point, usize>]) -> usize {
-    solve(input, |p| p.manhatten())
+    solve(input, |p| p.manhattan())
 }
 
 #[aoc(day3, part2)]
@@ -63,7 +68,8 @@ fn part2(input: &[HashMap<Point, usize>]) -> usize {
 }
 
 impl Point {
-    fn step(&mut self, dir: &Direction) {
+    #[inline]
+    fn step(&mut self, dir: Direction) {
         match dir {
             Direction::East => self.x += 1,
             Direction::West => self.x -= 1,
@@ -72,7 +78,8 @@ impl Point {
         }
     }
 
-    fn manhatten(&self) -> usize {
+    #[inline]
+    fn manhattan(&self) -> usize {
         (self.x.abs() + self.y.abs()).try_into().unwrap()
     }
 }
