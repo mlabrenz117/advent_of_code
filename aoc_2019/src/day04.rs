@@ -60,11 +60,7 @@ fn has_double(value: usize) -> bool {
             v.push(c);
         }
     }
-    if v.len() == 2 {
-        true
-    } else {
-        false
-    }
+    v.len() == 2
 }
 
 #[cfg(test)]
