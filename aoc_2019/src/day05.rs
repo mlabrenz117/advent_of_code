@@ -7,22 +7,24 @@ fn generator(input: &str) -> Vec<isize> {
 
 #[aoc(day5, part1)]
 fn part1(input: &[isize]) -> usize {
-    let in_fn = Box::new(|| 1);
-    let out_fn = Box::new(|x| {
+    let mut result = 0;
+    let mut in_fn = || 1;
+    let mut out_fn = |x| {
         if x != 0 {
-            println!("{}", x);
+            result = x;
         }
-    });
-    let mut comp = IntcodeComputer::new(input, in_fn, out_fn);
+    };
+    let mut comp = IntcodeComputer::new(input, &mut in_fn, &mut out_fn);
     comp.run();
-    0
+    result as usize
 }
 
 #[aoc(day5, part2)]
 fn part2(input: &[isize]) -> usize {
-    let in_fn = Box::new(|| 5);
-    let out_fn = Box::new(|x| println!("{}", x));
-    let mut comp = IntcodeComputer::new(input, in_fn, out_fn);
+    let mut result = 0;
+    let mut in_fn = || 5;
+    let mut out_fn = |x| result = x;
+    let mut comp = IntcodeComputer::new(input, &mut in_fn, &mut out_fn);
     comp.run();
-    0
+    result as usize
 }

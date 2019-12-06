@@ -1,10 +1,10 @@
 use std::convert::TryFrom;
 
-pub struct IntcodeComputer {
+pub struct IntcodeComputer<'a> {
     memory: Vec<isize>,
     pc: usize,
-    in_fn: Box<dyn Fn() -> isize>,
-    out_fn: Box<dyn Fn(isize)>,
+    in_fn: &'a mut dyn FnMut() -> isize,
+    out_fn: &'a mut dyn FnMut(isize),
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -38,8 +38,8 @@ pub enum InvalidInstruction {
     Invalid(isize),
 }
 
-impl IntcodeComputer {
-    pub fn new(program: &[isize], in_fn: Box<dyn Fn() -> isize>, out_fn: Box<dyn Fn(isize)>) -> Self {
+impl<'a> IntcodeComputer<'a> {
+    pub fn new(program: &[isize], in_fn: &'a mut dyn FnMut() -> isize, out_fn: &'a mut dyn FnMut(isize)) -> Self {
         Self {
             memory: Vec::from(program),
             pc: 0,
@@ -97,8 +97,9 @@ impl IntcodeComputer {
                 Intcode::Input(op1) => {
                     self.memory[op1.value as usize] = (self.in_fn)();
                 }
-                Intcode::Output(op1) => {
-                    (self.out_fn)(op1.fetch(self.memory()));
+                Intcode::Output(op) => {
+                    let op = op.fetch(self.memory());
+                    (self.out_fn)(op);
                 }
                 Intcode::Halt => break,
             }
