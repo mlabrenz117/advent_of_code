@@ -2,7 +2,10 @@ use crate::intcode::*;
 
 #[aoc_generator(day5)]
 fn generator(input: &str) -> Vec<isize> {
-    input.split(',').map(|s| s.parse::<isize>().unwrap()).collect()
+    input
+        .split(',')
+        .map(|s| s.parse::<isize>().unwrap())
+        .collect()
 }
 
 #[aoc(day5, part1)]

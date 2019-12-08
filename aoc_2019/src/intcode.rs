@@ -23,7 +23,7 @@ pub enum Intcode {
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Param {
     value: isize,
-    mode: AddressingMode
+    mode: AddressingMode,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -39,7 +39,11 @@ pub enum InvalidInstruction {
 }
 
 impl<'a> IntcodeComputer<'a> {
-    pub fn new(program: &[isize], in_fn: &'a mut dyn FnMut() -> isize, out_fn: &'a mut dyn FnMut(isize)) -> Self {
+    pub fn new(
+        program: &[isize],
+        in_fn: &'a mut dyn FnMut() -> isize,
+        out_fn: &'a mut dyn FnMut(isize),
+    ) -> Self {
         Self {
             memory: Vec::from(program),
             pc: 0,
@@ -55,11 +59,11 @@ impl<'a> IntcodeComputer<'a> {
                 Intcode::Add(op1, op2, op3) => {
                     let (op1, op2) = (op1.fetch(self.memory()), op2.fetch(&self.memory()));
                     self.memory[op3.value as usize] = op1 + op2;
-                },
+                }
                 Intcode::Mul(op1, op2, op3) => {
                     let (op1, op2) = (op1.fetch(self.memory()), op2.fetch(&self.memory()));
                     self.memory[op3.value as usize] = op1 * op2;
-                },
+                }
                 Intcode::JNZ(op1, op2) => {
                     let (op1, op2) = (op1.fetch(self.memory()), op2.fetch(&self.memory()));
                     if op1 != 0 {
@@ -127,7 +131,7 @@ impl TryFrom<&[isize]> for Intcode {
         let instruction = match opcode {
             op @ 1..=2 | op @ 7..=8 => {
                 if input.len() < 4 {
-                    return Err(InvalidInstruction::MissingParams)
+                    return Err(InvalidInstruction::MissingParams);
                 }
                 let op1 = Param::new(input[1], v1 % 10)?;
                 v1 /= 10;
@@ -142,7 +146,7 @@ impl TryFrom<&[isize]> for Intcode {
                     _ => unreachable!(),
                 }
             }
-            op @ 3..=4  => {
+            op @ 3..=4 => {
                 if input.len() < 2 {
                     return Err(InvalidInstruction::MissingParams);
                 }
@@ -176,8 +180,8 @@ impl TryFrom<&[isize]> for Intcode {
 impl Intcode {
     fn size(&self) -> usize {
         match self {
-            Intcode::Add(_,_,_) => 4,
-            Intcode::Mul(_,_,_) => 4,
+            Intcode::Add(_, _, _) => 4,
+            Intcode::Mul(_, _, _) => 4,
             Intcode::JNZ(_, _) => 3,
             Intcode::JZ(_, _) => 3,
             Intcode::LT(_, _, _) => 4,
@@ -195,10 +199,7 @@ impl Param {
         if mode == AddressingMode::Position && value < 0 {
             return Err(InvalidInstruction::NegativePositionalParam);
         }
-        Ok(Self {
-            value,
-            mode,
-        })
+        Ok(Self { value, mode })
     }
     fn fetch(&self, memory: &[isize]) -> isize {
         match self.mode {

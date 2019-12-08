@@ -6,12 +6,18 @@ fn generator(input: &str) -> (usize, usize) {
 
 #[aoc(day4, part1)]
 fn part1(input: &(usize, usize)) -> usize {
-    (input.0..input.1).filter(|x| monotonic(*x)).filter(|x| has_multiple(*x)).count()
+    (input.0..input.1)
+        .filter(|x| monotonic(*x))
+        .filter(|x| has_multiple(*x))
+        .count()
 }
 
 #[aoc(day4, part2)]
 fn part2(input: &(usize, usize)) -> usize {
-    (input.0..input.1).filter(|x| monotonic(*x)).filter(|x| has_double(*x)).count()
+    (input.0..input.1)
+        .filter(|x| monotonic(*x))
+        .filter(|x| has_double(*x))
+        .count()
 }
 
 fn monotonic(value: usize) -> bool {
@@ -55,8 +61,7 @@ fn has_double(value: usize) -> bool {
                     v.push(c);
                 }
             }
-        }
-        else {
+        } else {
             v.push(c);
         }
     }
