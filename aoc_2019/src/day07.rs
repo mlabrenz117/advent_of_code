@@ -44,8 +44,6 @@ fn part2(program: &[isize]) -> isize {
     thread::scope(|s| {
         for phase_setting in (5..=9).permutations(5) {
             const NUM_AMPS: usize = 5;
-            let mut out = 0;
-            let result_sender = send.clone();
             let mut amp_senders = VecDeque::with_capacity(5);
             let mut amp_receivers = VecDeque::with_capacity(5);
             for phase in phase_setting.iter().take(NUM_AMPS) {
@@ -58,28 +56,21 @@ fn part2(program: &[isize]) -> isize {
             let a_sender = amp_senders.pop_front().unwrap();
             a_sender.send(0).unwrap();
             amp_senders.push_back(a_sender);
-            for _ in 0..(NUM_AMPS - 1) {
+            for i in 0..NUM_AMPS {
                 let sender = amp_senders.pop_front().unwrap();
                 let receiver = amp_receivers.pop_front().unwrap();
+                let result_sender = send.clone();
                 s.spawn(move |_| {
-                    let out_fn = |x| sender.send(x).unwrap();
+                    let out_fn = |x| {
+                        if sender.send(x).is_err() && i == NUM_AMPS - 1{
+                            // The first amplifier has halted
+                            result_sender.send(x).unwrap();
+                        }
+                    };
                     let mut ic = IntcodeComputer::new(&program, receiver, out_fn);
                     ic.run();
                 });
             }
-            let loopback_sender = amp_senders.pop_front().unwrap();
-            let receiver = amp_receivers.pop_front().unwrap();
-            s.spawn(move |_| {
-                let out_fn = |x| {
-                    if loopback_sender.send(x).is_err() {
-                        // The first amplifier has halted
-                        out = x;
-                    }
-                };
-                let mut ic = IntcodeComputer::new(&program, receiver, out_fn);
-                ic.run();
-                result_sender.send(out).unwrap();
-            });
         }
     })
     .unwrap();

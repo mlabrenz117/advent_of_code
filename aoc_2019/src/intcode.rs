@@ -1,7 +1,5 @@
 use std::{marker::PhantomData, convert::TryFrom, borrow::Borrow};
 
-use crossbeam::{channel, Sender};
-
 pub struct IntcodeComputer<I, U: Borrow<isize>, O> {
     memory: Vec<isize>,
     pc: usize,
