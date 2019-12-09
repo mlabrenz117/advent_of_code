@@ -41,16 +41,6 @@ pub enum InvalidInstruction {
     Invalid(isize),
 }
 
-impl<U: Borrow<isize>> IntcodeComputer<channel::IntoIter<U>, U, Box<dyn FnMut(isize)>>
-{
-    pub fn new_with_channel(program: &[isize], channel_size: usize) -> (Self, Sender<U>) {
-        let o : Box<dyn FnMut(isize)> = Box::new(|x| println!("{}", x));
-        let (s, r) = channel::bounded(channel_size);
-        let comp = IntcodeComputer::new(program, r, o);
-        (comp, s)
-    }
-}
-
 impl<I: Iterator<Item = U>, U: Borrow<isize>, O> IntcodeComputer<I, U, O>
 where O: FnMut(isize)
 {
@@ -65,11 +55,6 @@ where O: FnMut(isize)
             out_fn,
             pd: PhantomData,
         }
-    }
-
-    pub fn update_out(&mut self, out_fn: O) {
-        // Test
-        self.out_fn = out_fn;
     }
 
     pub fn run(&mut self) {
