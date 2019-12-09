@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, convert::TryFrom, borrow::Borrow};
+use std::{borrow::Borrow, convert::TryFrom, marker::PhantomData};
 
 pub struct IntcodeComputer<I, U: Borrow<isize>, O> {
     memory: Vec<isize>,
@@ -40,7 +40,8 @@ pub enum InvalidInstruction {
 }
 
 impl<I: Iterator<Item = U>, U: Borrow<isize>, O> IntcodeComputer<I, U, O>
-where O: FnMut(isize)
+where
+    O: FnMut(isize),
 {
     pub fn new<T>(program: &[isize], input: T, out_fn: O) -> Self
     where

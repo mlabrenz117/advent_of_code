@@ -2,7 +2,7 @@ use std::{collections::VecDeque, iter};
 
 use crate::intcode::*;
 
-use crossbeam::{thread, channel};
+use crossbeam::{channel, thread};
 use itertools::Itertools;
 
 #[aoc_generator(day7)]
@@ -62,7 +62,7 @@ fn part2(program: &[isize]) -> isize {
                 let result_sender = send.clone();
                 s.spawn(move |_| {
                     let out_fn = |x| {
-                        if sender.send(x).is_err() && i == NUM_AMPS - 1{
+                        if sender.send(x).is_err() && i == NUM_AMPS - 1 {
                             // The first amplifier has halted
                             result_sender.send(x).unwrap();
                         }
