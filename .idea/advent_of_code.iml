@@ -10,6 +10,9 @@
       <sourceFolder url="file://$MODULE_DIR$/aoc_2018/examples" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/aoc_2018/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/aoc_2018/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/aoc_2019\examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/aoc_2019\tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/aoc_2019\benches" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/aoc_2018/target" />
       <excludeFolder url="file://$MODULE_DIR$/aoc_2019/target" />
     </content>

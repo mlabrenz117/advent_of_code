@@ -53,13 +53,11 @@ fn has_double(value: usize) -> bool {
         if let Some(&l) = v.last() {
             if c == l {
                 v.push(c)
+            } else if v.len() == 2 {
+                return true;
             } else {
-                if v.len() == 2 {
-                    return true;
-                } else {
-                    v.clear();
-                    v.push(c);
-                }
+                v.clear();
+                v.push(c);
             }
         } else {
             v.push(c);

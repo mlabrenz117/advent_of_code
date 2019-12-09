@@ -1,10 +1,13 @@
-use std::convert::TryFrom;
+use std::{marker::PhantomData, convert::TryFrom, borrow::Borrow};
 
-pub struct IntcodeComputer<'a> {
+use crossbeam::{channel, Sender};
+
+pub struct IntcodeComputer<I, U: Borrow<isize>, O> {
     memory: Vec<isize>,
     pc: usize,
-    in_fn: &'a mut dyn FnMut() -> isize,
-    out_fn: &'a mut dyn FnMut(isize),
+    input: I,
+    out_fn: O,
+    pd: PhantomData<U>,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -38,18 +41,35 @@ pub enum InvalidInstruction {
     Invalid(isize),
 }
 
-impl<'a> IntcodeComputer<'a> {
-    pub fn new(
-        program: &[isize],
-        in_fn: &'a mut dyn FnMut() -> isize,
-        out_fn: &'a mut dyn FnMut(isize),
-    ) -> Self {
+impl<U: Borrow<isize>> IntcodeComputer<channel::IntoIter<U>, U, Box<dyn FnMut(isize)>>
+{
+    pub fn new_with_channel(program: &[isize], channel_size: usize) -> (Self, Sender<U>) {
+        let o : Box<dyn FnMut(isize)> = Box::new(|x| println!("{}", x));
+        let (s, r) = channel::bounded(channel_size);
+        let comp = IntcodeComputer::new(program, r, o);
+        (comp, s)
+    }
+}
+
+impl<I: Iterator<Item = U>, U: Borrow<isize>, O> IntcodeComputer<I, U, O>
+where O: FnMut(isize)
+{
+    pub fn new<T>(program: &[isize], input: T, out_fn: O) -> Self
+    where
+        T: IntoIterator<Item = U, IntoIter = I>,
+    {
         Self {
             memory: Vec::from(program),
             pc: 0,
-            in_fn,
+            input: input.into_iter(),
             out_fn,
+            pd: PhantomData,
         }
+    }
+
+    pub fn update_out(&mut self, out_fn: O) {
+        // Test
+        self.out_fn = out_fn;
     }
 
     pub fn run(&mut self) {
@@ -99,7 +119,7 @@ impl<'a> IntcodeComputer<'a> {
                     }
                 }
                 Intcode::Input(op1) => {
-                    self.memory[op1.value as usize] = (self.in_fn)();
+                    self.memory[op1.value as usize] = *self.input.next().unwrap().borrow();
                 }
                 Intcode::Output(op) => {
                     let op = op.fetch(self.memory());

@@ -11,13 +11,13 @@ fn generator(input: &str) -> Vec<isize> {
 #[aoc(day5, part1)]
 fn part1(input: &[isize]) -> usize {
     let mut result = 0;
-    let mut in_fn = || 1;
-    let mut out_fn = |x| {
+    let in_fn = [1];
+    let out_fn = |x| {
         if x != 0 {
             result = x;
         }
     };
-    let mut comp = IntcodeComputer::new(input, &mut in_fn, &mut out_fn);
+    let mut comp = IntcodeComputer::new(input, &in_fn, out_fn);
     comp.run();
     result as usize
 }
@@ -25,9 +25,9 @@ fn part1(input: &[isize]) -> usize {
 #[aoc(day5, part2)]
 fn part2(input: &[isize]) -> usize {
     let mut result = 0;
-    let mut in_fn = || 5;
-    let mut out_fn = |x| result = x;
-    let mut comp = IntcodeComputer::new(input, &mut in_fn, &mut out_fn);
+    let in_fn = [5];
+    let out_fn = |x| result = x;
+    let mut comp = IntcodeComputer::new(input, &in_fn[..], out_fn);
     comp.run();
     result as usize
 }
