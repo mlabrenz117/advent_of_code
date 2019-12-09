@@ -1,7 +1,5 @@
 use std::{collections::HashMap, iter};
 
-use crate::utils::HashMapExtension;
-
 #[aoc_generator(day6)]
 fn generator(input: &str) -> HashMap<String, String> {
     input
