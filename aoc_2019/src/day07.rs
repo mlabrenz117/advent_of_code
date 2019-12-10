@@ -27,7 +27,7 @@ fn part1(program: &[isize]) -> isize {
                     let input =
                         iter::from_fn(|| get_input(i, &mut in_access[..], &phase_setting[..], out));
                     let mut amp = IntcodeComputer::new(program, input, out_fn);
-                    amp.run();
+                    amp.run().unwrap();
                 }
                 sender.send(out).unwrap();
             });
@@ -68,7 +68,7 @@ fn part2(program: &[isize]) -> isize {
                         }
                     };
                     let mut ic = IntcodeComputer::new(&program, receiver, out_fn);
-                    ic.run();
+                    ic.run().unwrap();
                 });
             }
         }

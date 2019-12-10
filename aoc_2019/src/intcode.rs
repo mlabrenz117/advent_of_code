@@ -1,8 +1,15 @@
-use std::{borrow::Borrow, convert::TryFrom, marker::PhantomData};
+use std::{
+    borrow::Borrow,
+    convert::TryFrom,
+    error::Error,
+    fmt::{self, Display},
+    marker::PhantomData,
+};
 
 pub struct IntcodeComputer<I, U: Borrow<isize>, O> {
     memory: Vec<isize>,
     pc: usize,
+    relative_base: isize,
     input: I,
     out_fn: O,
     pd: PhantomData<U>,
@@ -12,12 +19,13 @@ pub struct IntcodeComputer<I, U: Borrow<isize>, O> {
 pub enum Intcode {
     Add(Param, Param, Param),
     Mul(Param, Param, Param),
+    Input(Param),
+    Output(Param),
     JNZ(Param, Param),
     JZ(Param, Param),
     LT(Param, Param, Param),
     EQ(Param, Param, Param),
-    Input(Param),
-    Output(Param),
+    RBO(Param),
     Halt,
 }
 
@@ -31,12 +39,15 @@ pub struct Param {
 pub enum AddressingMode {
     Position,
     Immediate,
+    Relative,
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum InvalidInstruction {
     MissingParams,
     NegativePositionalParam,
     Invalid(isize),
+    InvalidAddress,
 }
 
 impl<I: Iterator<Item = U>, U: Borrow<isize>, O> IntcodeComputer<I, U, O>
@@ -47,44 +58,50 @@ where
     where
         T: IntoIterator<Item = U, IntoIter = I>,
     {
+        let mut memory = Vec::from(program);
+        memory.extend((0..program.len() * 10).map(|_| 0));
         Self {
-            memory: Vec::from(program),
+            memory,
             pc: 0,
+            relative_base: 0,
             input: input.into_iter(),
             out_fn,
             pd: PhantomData,
         }
     }
 
-    pub fn run(&mut self) {
+    pub fn run(&mut self) -> Result<(), InvalidInstruction> {
         while let Ok(intcode) = Intcode::try_from(&self.memory[self.pc..]) {
             let mut jmp = false;
             match intcode {
                 Intcode::Add(op1, op2, op3) => {
-                    let (op1, op2) = (op1.fetch(self.memory()), op2.fetch(&self.memory()));
-                    self.memory[op3.value as usize] = op1 + op2;
+                    let (op1, op2) = (self.eval_param(op1)?, self.eval_param(op2)?);
+                    let loc = op3.memory_address(self.relative_base)?;
+                    self.memory[loc] = op1 + op2;
                 }
                 Intcode::Mul(op1, op2, op3) => {
-                    let (op1, op2) = (op1.fetch(self.memory()), op2.fetch(&self.memory()));
-                    self.memory[op3.value as usize] = op1 * op2;
+                    let (op1, op2) = (self.eval_param(op1)?, self.eval_param(op2)?);
+                    let loc = op3.memory_address(self.relative_base)?;
+                    self.memory[loc] = op1 * op2;
                 }
                 Intcode::JNZ(op1, op2) => {
-                    let (op1, op2) = (op1.fetch(self.memory()), op2.fetch(&self.memory()));
+                    let (op1, op2) = (self.eval_param(op1)?, self.eval_param(op2)?);
                     if op1 != 0 {
                         jmp = true;
                         self.pc = op2 as usize;
                     }
                 }
                 Intcode::JZ(op1, op2) => {
-                    let (op1, op2) = (op1.fetch(self.memory()), op2.fetch(&self.memory()));
+                    let (op1, op2) = (self.eval_param(op1)?, self.eval_param(op2)?);
                     if op1 == 0 {
                         jmp = true;
                         self.pc = op2 as usize;
                     }
                 }
                 Intcode::LT(op1, op2, op3) => {
-                    self.memory[op3.value as usize] = {
-                        let (op1, op2) = (op1.fetch(self.memory()), op2.fetch(&self.memory()));
+                    let loc = op3.memory_address(self.relative_base)?;
+                    self.memory[loc] = {
+                        let (op1, op2) = (self.eval_param(op1)?, self.eval_param(op2)?);
                         if op1 < op2 {
                             1
                         } else {
@@ -93,8 +110,10 @@ where
                     }
                 }
                 Intcode::EQ(op1, op2, op3) => {
-                    self.memory[op3.value as usize] = {
-                        let (op1, op2) = (op1.fetch(self.memory()), op2.fetch(&self.memory()));
+                    let loc = op3.memory_address(self.relative_base)?;
+                    self.memory[loc] = {
+                        let op1 = self.eval_param(op1)?;
+                        let op2 = self.eval_param(op2)?;
                         if op1 == op2 {
                             1
                         } else {
@@ -103,11 +122,16 @@ where
                     }
                 }
                 Intcode::Input(op1) => {
-                    self.memory[op1.value as usize] = *self.input.next().unwrap().borrow();
+                    let loc = op1.memory_address(self.relative_base)?;
+                    self.memory[loc] = *self.input.next().unwrap().borrow();
                 }
                 Intcode::Output(op) => {
-                    let op = op.fetch(self.memory());
+                    let op = self.eval_param(op)?;
                     (self.out_fn)(op);
+                }
+                Intcode::RBO(op) => {
+                    let op = self.eval_param(op)?;
+                    self.relative_base += op;
                 }
                 Intcode::Halt => break,
             }
@@ -115,10 +139,25 @@ where
                 self.pc += intcode.size();
             }
         }
+        Ok(())
     }
 
     pub fn memory(&self) -> &[isize] {
         &self.memory
+    }
+
+    pub fn eval_param(&self, param: Param) -> Result<isize, InvalidInstruction> {
+        match param.mode {
+            AddressingMode::Immediate => Ok(param.value),
+            AddressingMode::Position => Ok(self.memory[param.value as usize]),
+            AddressingMode::Relative => {
+                if self.relative_base + param.value >= 0 {
+                    Ok(self.memory[(self.relative_base + param.value) as usize])
+                } else {
+                    Err(InvalidInstruction::InvalidAddress)
+                }
+            }
+        }
     }
 }
 
@@ -150,7 +189,7 @@ impl TryFrom<&[isize]> for Intcode {
                     _ => unreachable!(),
                 }
             }
-            op @ 3..=4 => {
+            op @ 3..=4 | op @ 9 => {
                 if input.len() < 2 {
                     return Err(InvalidInstruction::MissingParams);
                 }
@@ -158,6 +197,7 @@ impl TryFrom<&[isize]> for Intcode {
                 match op {
                     3 => Intcode::Input(op1),
                     4 => Intcode::Output(op1),
+                    9 => Intcode::RBO(op1),
                     _ => unreachable!(),
                 }
             }
@@ -192,6 +232,7 @@ impl Intcode {
             Intcode::EQ(_, _, _) => 4,
             Intcode::Input(_) => 2,
             Intcode::Output(_) => 2,
+            Intcode::RBO(_) => 2,
             Intcode::Halt => 1,
         }
     }
@@ -205,10 +246,17 @@ impl Param {
         }
         Ok(Self { value, mode })
     }
-    fn fetch(&self, memory: &[isize]) -> isize {
+
+    fn memory_address(&self, base_offset: isize) -> Result<usize, InvalidInstruction> {
         match self.mode {
-            AddressingMode::Immediate => self.value,
-            AddressingMode::Position => memory[self.value as usize],
+            AddressingMode::Position => Ok(self.value as usize),
+            AddressingMode::Relative => {
+                if self.value + base_offset < 0 {
+                    return Err(InvalidInstruction::InvalidAddress);
+                }
+                Ok((self.value + base_offset) as usize)
+            }
+            _ => Err(InvalidInstruction::InvalidAddress),
         }
     }
 }
@@ -218,7 +266,24 @@ impl From<isize> for AddressingMode {
         match input {
             0 => Self::Position,
             1 => Self::Immediate,
+            2 => Self::Relative,
             _ => unreachable!(),
         }
     }
 }
+
+impl Display for InvalidInstruction {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            InvalidInstruction::InvalidAddress => {
+                write!(fmt, "Attempted to access invalid memory.")
+            }
+            InvalidInstruction::MissingParams => {
+                write!(fmt, "Instruction missing one or more parameters.")
+            }
+            _ => write!(fmt, "Invalid Instruction"),
+        }
+    }
+}
+
+impl Error for InvalidInstruction {}

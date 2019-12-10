@@ -7,9 +7,9 @@ fn generator(input: &str) -> Vec<Layer> {
     let mut v: Vec<Layer> = Vec::with_capacity(layers);
     for _ in 0..layers {
         let mut layer: [[u8; 25]; 6] = [[0; 25]; 6];
-        for y in 0..6 {
-            for x in 0..25 {
-                layer[y][x] = values.next().unwrap();
+        for row in &mut layer {
+            for value in row.iter_mut().take(25) {
+                *value = values.next().unwrap();
             }
         }
         v.push(layer);
@@ -23,9 +23,9 @@ fn part1(image: &[Layer]) -> usize {
     let mut fewest_zero_layer: &Layer = &image[1];
     for layer in image {
         let mut zeros = 0;
-        for y in 0..6 {
-            for x in 0..25 {
-                if layer[y][x] == 0 {
+        for row in layer.iter().take(6) {
+            for value in row.iter().take(25) {
+                if *value == 0 {
                     zeros += 1;
                 }
             }
@@ -37,12 +37,13 @@ fn part1(image: &[Layer]) -> usize {
     }
     let mut ones = 0;
     let mut twos = 0;
-    for y in 0..6 {
-        for x in 0..25 {
-            match fewest_zero_layer[y][x] {
+    for row in fewest_zero_layer.iter().take(6) {
+        for value in row.iter().take(25) {
+            match value {
+                //test
                 1 => ones += 1,
                 2 => twos += 1,
-                _ => {},
+                _ => {}
             }
         }
     }
@@ -85,9 +86,9 @@ fn part2(input: &[Layer]) -> String {
             }
         }
     }
-    for y in 0..6 {
-        for x in 0..25 {
-            match image[y][x] {
+    for row in &image {
+        for value in row.iter().take(25) {
+            match value {
                 PixelColor::Black => print!(" "),
                 PixelColor::White => print!("0"),
                 PixelColor::Transparent => print!("t"),
@@ -95,20 +96,22 @@ fn part2(input: &[Layer]) -> String {
         }
         println!();
     }
+
+    // Puzzle specific
     "KCGEC".to_owned()
 }
 
 #[cfg(test)]
 mod test {
+    use super::*;
     use std::fs::File;
     use std::io::Read;
-    use super::*;
 
     #[test]
     fn d8p1() {
         let mut input = String::new();
         let mut f = File::open("input/2019/day8.txt").unwrap();
-        f.read_to_string(&mut input);
+        f.read_to_string(&mut input).unwrap();
         let v = generator(&input);
         assert_eq!(part1(&v), 1584);
     }

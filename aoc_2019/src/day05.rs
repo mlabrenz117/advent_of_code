@@ -18,7 +18,7 @@ fn part1(input: &[isize]) -> usize {
         }
     };
     let mut comp = IntcodeComputer::new(input, &in_fn, out_fn);
-    comp.run();
+    comp.run().unwrap();
     result as usize
 }
 
@@ -28,6 +28,6 @@ fn part2(input: &[isize]) -> usize {
     let in_fn = [5];
     let out_fn = |x| result = x;
     let mut comp = IntcodeComputer::new(input, &in_fn[..], out_fn);
-    comp.run();
+    comp.run().unwrap();
     result as usize
 }
