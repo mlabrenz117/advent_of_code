@@ -42,3 +42,17 @@ fn part2(orbital_map: &HashMap<String, String>) -> usize {
     }
     0
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn d6() {
+        let input = " COM)B\nB)C\nC)D\nD)E\nE)F\nB)G\nG)H\nD)I\nE)J\nJ)K\nK)L\nK)YOU\nI)SAN\n";
+        let graph1 = generator(&input[0..46]);
+        assert_eq!(part1(&graph1), 42);
+        let graph2 = generator(input);
+        assert_eq!(part2(&graph2), 4);
+    }
+}

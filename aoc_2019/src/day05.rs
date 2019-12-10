@@ -31,3 +31,25 @@ fn part2(input: &[isize]) -> usize {
     comp.run().unwrap();
     result as usize
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn d5() {
+        let mut result = -1;
+        let programs = [
+            "3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9",
+            "3,3,1105,-1,9,1101,0,0,12,4,12,99,1"];
+        for program in &programs {
+            let program = generator(program);
+            let mut comp = IntcodeComputer::new(&program, &[5], |x| result = x);
+            comp.run().unwrap();
+            assert_eq!(result, 1);
+            let mut comp = IntcodeComputer::new(&program, &[0], |x| result = x);
+            comp.run().unwrap();
+            assert_eq!(result, 0);
+        }
+    }
+}
