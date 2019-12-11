@@ -7,5 +7,6 @@ edition = "2018"
 [dependencies]
 crossbeam = "0.7"
 itertools = "0.8"
+ordered-float = "1.0"
 aoc-runner = "0.2"
 aoc-runner-derive ="0.2"
