@@ -56,3 +56,17 @@ where
         }
     }
 }
+
+#[derive(Copy, Clone, Debug)]
+pub enum Direction {
+    North,
+    South,
+    East,
+    West,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub struct Point {
+    pub x: isize,
+    pub y: isize,
+}
